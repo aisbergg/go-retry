@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	sethvargo "github.com/aisbergg/go-retry"
+	aisbergg "github.com/aisbergg/go-retry/pkg/retry"
 	cenkalti "github.com/cenkalti/backoff"
 	lestrrat "github.com/lestrrat-go/backoff"
 )
@@ -41,12 +41,12 @@ func Benchmark(b *testing.B) {
 		}
 	})
 
-	b.Run("sethvargo", func(b *testing.B) {
-		backoff := sethvargo.NewExponential(1 * time.Second)
+	b.Run("aisbergg", func(b *testing.B) {
+		backoff := aisbergg.NewExponential(1 * time.Second)
 		b.ResetTimer()
 
 		for i := 0; i < b.N; i++ {
-			backoff.Next()
+			backoff.Next(nil)
 		}
 	})
 }
