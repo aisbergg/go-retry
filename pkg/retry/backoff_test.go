@@ -1,4 +1,4 @@
-package retry_test
+package retry
 
 import (
 	"context"
@@ -10,29 +10,27 @@ import (
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/aisbergg/go-retry"
 )
 
 func ExampleBackoffFunc() {
 	ctx := context.Background()
 
 	// Example backoff middleware that adds the provided duration t to the result.
-	withShift := func(t time.Duration, next retry.Backoff) retry.BackoffFunc {
+	withShift := func(t time.Duration, next Backoff) BackoffFunc {
 		return func(err error) (time.Duration, error) {
 			delay, err := next.Next(err)
-			if retry.IsStopped(delay) {
-				return retry.Stop, err
+			if IsStopped(delay) {
+				return Stop, err
 			}
 			return delay + t, err
 		}
 	}
 
 	// Middlewrap wrap another backoff:
-	b := retry.NewFibonacci(1 * time.Second)
+	b := NewFibonacci(1 * time.Second)
 	b = withShift(5*time.Second, b)
 
-	if err := retry.Do(ctx, b, func(ctx context.Context) error {
+	if err := Do(ctx, b, func(ctx context.Context) error {
 		// Actual retry logic here
 		return nil
 	}); err != nil {
@@ -44,11 +42,11 @@ func TestWithJitter(t *testing.T) {
 	t.Parallel()
 
 	for i := 0; i < 10_000; i++ {
-		b := retry.WithJitter(250*time.Millisecond, false, retry.BackoffFunc(func(err error) (time.Duration, error) {
+		b := WithJitter(250*time.Millisecond, false, BackoffFunc(func(err error) (time.Duration, error) {
 			return 1 * time.Second, err
 		}))
 		delay, _ := b.Next(nil)
-		if retry.IsStopped(delay) {
+		if IsStopped(delay) {
 			t.Errorf("should not stop")
 		}
 
@@ -58,11 +56,11 @@ func TestWithJitter(t *testing.T) {
 	}
 
 	for i := 0; i < 10_000; i++ {
-		b := retry.WithJitter(500*time.Millisecond, true, retry.BackoffFunc(func(err error) (time.Duration, error) {
+		b := WithJitter(500*time.Millisecond, true, BackoffFunc(func(err error) (time.Duration, error) {
 			return 1 * time.Second, err
 		}))
 		delay, _ := b.Next(nil)
-		if retry.IsStopped(delay) {
+		if IsStopped(delay) {
 			t.Errorf("should not stop")
 		}
 
@@ -75,10 +73,10 @@ func TestWithJitter(t *testing.T) {
 func ExampleWithJitter() {
 	ctx := context.Background()
 
-	b := retry.NewFibonacci(1 * time.Second)
-	b = retry.WithJitter(1*time.Second, false, b)
+	b := NewFibonacci(1 * time.Second)
+	b = WithJitter(1*time.Second, false, b)
 
-	if err := retry.Do(ctx, b, func(_ context.Context) error {
+	if err := Do(ctx, b, func(_ context.Context) error {
 		// TODO: logic here
 		return nil
 	}); err != nil {
@@ -90,11 +88,11 @@ func TestWithJitterPercent(t *testing.T) {
 	t.Parallel()
 
 	for i := 0; i < 10_000; i++ {
-		b := retry.WithJitterPercent(5, false, retry.BackoffFunc(func(err error) (time.Duration, error) {
+		b := WithJitterPercent(5, false, BackoffFunc(func(err error) (time.Duration, error) {
 			return 1 * time.Second, err
 		}))
 		delay, _ := b.Next(nil)
-		if retry.IsStopped(delay) {
+		if IsStopped(delay) {
 			t.Errorf("should not stop")
 		}
 
@@ -104,11 +102,11 @@ func TestWithJitterPercent(t *testing.T) {
 	}
 
 	for i := 0; i < 10_000; i++ {
-		b := retry.WithJitterPercent(5, true, retry.BackoffFunc(func(err error) (time.Duration, error) {
+		b := WithJitterPercent(5, true, BackoffFunc(func(err error) (time.Duration, error) {
 			return 1 * time.Second, err
 		}))
 		delay, _ := b.Next(nil)
-		if retry.IsStopped(delay) {
+		if IsStopped(delay) {
 			t.Errorf("should not stop")
 		}
 
@@ -121,10 +119,10 @@ func TestWithJitterPercent(t *testing.T) {
 func ExampleWithJitterPercent() {
 	ctx := context.Background()
 
-	b := retry.NewFibonacci(1 * time.Second)
-	b = retry.WithJitterPercent(5, false, b)
+	b := NewFibonacci(1 * time.Second)
+	b = WithJitterPercent(5, false, b)
 
-	if err := retry.Do(ctx, b, func(_ context.Context) error {
+	if err := Do(ctx, b, func(_ context.Context) error {
 		// TODO: logic here
 		return nil
 	}); err != nil {
@@ -135,14 +133,14 @@ func ExampleWithJitterPercent() {
 func TestWithMaxRetries(t *testing.T) {
 	t.Parallel()
 
-	b := retry.WithMaxRetries(3, retry.BackoffFunc(func(err error) (time.Duration, error) {
+	b := WithMaxRetries(3, BackoffFunc(func(err error) (time.Duration, error) {
 		return 1 * time.Second, err
 	}))
 
 	// First 3 attempts succeed
 	for i := 0; i < 3; i++ {
 		delay, _ := b.Next(nil)
-		if retry.IsStopped(delay) {
+		if IsStopped(delay) {
 			t.Errorf("should not stop")
 		}
 		if delay != 1*time.Second {
@@ -160,10 +158,10 @@ func TestWithMaxRetries(t *testing.T) {
 func ExampleWithMaxRetries() {
 	ctx := context.Background()
 
-	b := retry.NewFibonacci(1 * time.Second)
-	b = retry.WithMaxRetries(3, b)
+	b := NewFibonacci(1 * time.Second)
+	b = WithMaxRetries(3, b)
 
-	if err := retry.Do(ctx, b, func(_ context.Context) error {
+	if err := Do(ctx, b, func(_ context.Context) error {
 		// TODO: logic here
 		return nil
 	}); err != nil {
@@ -174,12 +172,12 @@ func ExampleWithMaxRetries() {
 func TestWithCappedDuration(t *testing.T) {
 	t.Parallel()
 
-	b := retry.WithCappedDuration(3*time.Second, retry.BackoffFunc(func(err error) (time.Duration, error) {
+	b := WithCappedDuration(3*time.Second, BackoffFunc(func(err error) (time.Duration, error) {
 		return 5 * time.Second, err
 	}))
 
 	delay, _ := b.Next(nil)
-	if retry.IsStopped(delay) {
+	if IsStopped(delay) {
 		t.Errorf("should not stop")
 	}
 	if delay != 3*time.Second {
@@ -190,10 +188,10 @@ func TestWithCappedDuration(t *testing.T) {
 func ExampleWithCappedDuration() {
 	ctx := context.Background()
 
-	b := retry.NewFibonacci(1 * time.Second)
-	b = retry.WithCappedDuration(3*time.Second, b)
+	b := NewFibonacci(1 * time.Second)
+	b = WithCappedDuration(3*time.Second, b)
 
-	if err := retry.Do(ctx, b, func(_ context.Context) error {
+	if err := Do(ctx, b, func(_ context.Context) error {
 		// TODO: logic here
 		return nil
 	}); err != nil {
@@ -204,13 +202,13 @@ func ExampleWithCappedDuration() {
 func TestWithMaxDuration(t *testing.T) {
 	t.Parallel()
 
-	b := retry.WithMaxDuration(250*time.Millisecond, retry.BackoffFunc(func(err error) (time.Duration, error) {
+	b := WithMaxDuration(250*time.Millisecond, BackoffFunc(func(err error) (time.Duration, error) {
 		return 1 * time.Second, err
 	}))
 
 	// Take once, within timeout.
 	delay, _ := b.Next(nil)
-	if retry.IsStopped(delay) {
+	if IsStopped(delay) {
 		t.Error("should not stop")
 	}
 
@@ -222,7 +220,7 @@ func TestWithMaxDuration(t *testing.T) {
 
 	// Take again, remainder contines
 	delay, _ = b.Next(nil)
-	if retry.IsStopped(delay) {
+	if IsStopped(delay) {
 		t.Error("should not stop")
 	}
 
@@ -242,10 +240,10 @@ func TestWithMaxDuration(t *testing.T) {
 func ExampleWithMaxDuration() {
 	ctx := context.Background()
 
-	b := retry.NewFibonacci(1 * time.Second)
-	b = retry.WithMaxDuration(5*time.Second, b)
+	b := NewFibonacci(1 * time.Second)
+	b = WithMaxDuration(5*time.Second, b)
 
-	if err := retry.Do(ctx, b, func(_ context.Context) error {
+	if err := Do(ctx, b, func(_ context.Context) error {
 		// TODO: logic here
 		return nil
 	}); err != nil {
@@ -267,17 +265,17 @@ func (e *httpRetryableError) Error() string {
 }
 
 func TestWithCustom(t *testing.T) {
-	WithHTTPResponse := func(next retry.Backoff) retry.Backoff {
-		return retry.BackoffFunc(func(err error) (time.Duration, error) {
+	WithHTTPResponse := func(next Backoff) Backoff {
+		return BackoffFunc(func(err error) (time.Duration, error) {
 			var herr *httpRetryableError
 			if !errors.As(err, &herr) {
-				return retry.Stop, err
+				return Stop, err
 			}
 			err = herr.Unwrap()
 
 			delay, err := next.Next(err)
-			if retry.IsStopped(delay) {
-				return retry.Stop, err
+			if IsStopped(delay) {
+				return Stop, err
 			}
 
 			switch herr.resp.StatusCode {
@@ -298,7 +296,7 @@ func TestWithCustom(t *testing.T) {
 
 	ctx := context.Background()
 
-	b := retry.NewExponential(1 * time.Second)
+	b := NewExponential(1 * time.Second)
 	b = WithHTTPResponse(b)
 
 	reqCount := 0
@@ -317,7 +315,7 @@ func TestWithCustom(t *testing.T) {
 
 	var body []byte
 
-	err := retry.Do(ctx, b, func(_ context.Context) error {
+	err := Do(ctx, b, func(_ context.Context) error {
 		resp, err := http.Get(ts.URL)
 
 		if err == nil {

@@ -1,4 +1,4 @@
-package retry_test
+package retry
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 	"sort"
 	"testing"
 	"time"
-
-	"github.com/aisbergg/go-retry"
 )
 
 func TestConstantBackoff(t *testing.T) {
@@ -68,7 +66,7 @@ func TestConstantBackoff(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			b := retry.NewConstant(tc.base)
+			b := NewConstant(tc.base)
 
 			resultsCh := make(chan time.Duration, tc.tries)
 			for i := 0; i < tc.tries; i++ {
@@ -99,7 +97,7 @@ func TestConstantBackoff(t *testing.T) {
 }
 
 func ExampleNewConstant() {
-	b := retry.NewConstant(1 * time.Second)
+	b := NewConstant(1 * time.Second)
 
 	for i := 0; i < 5; i++ {
 		delay, _ := b.Next(nil)

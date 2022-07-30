@@ -18,7 +18,7 @@ import (
 )
 
 // RetryFunc is a function passed to retry.
-type RetryFunc func(ctx context.Context) error
+type RetryFunc func(ctx context.Context) error //revive:disable-line
 
 // Do wraps a function with a backoff to retry. The provided context is the same
 // context passed to the RetryFunc.

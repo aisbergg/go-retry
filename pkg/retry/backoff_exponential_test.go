@@ -1,4 +1,4 @@
-package retry_test
+package retry
 
 import (
 	"fmt"
@@ -7,8 +7,6 @@ import (
 	"sort"
 	"testing"
 	"time"
-
-	"github.com/aisbergg/go-retry"
 )
 
 func TestExponentialBackoff(t *testing.T) {
@@ -74,7 +72,7 @@ func TestExponentialBackoff(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			b := retry.NewExponential(tc.base)
+			b := NewExponential(tc.base)
 
 			resultsCh := make(chan time.Duration, tc.tries)
 			for i := 0; i < tc.tries; i++ {
@@ -105,7 +103,7 @@ func TestExponentialBackoff(t *testing.T) {
 }
 
 func ExampleNewExponential() {
-	b := retry.NewExponential(1 * time.Second)
+	b := NewExponential(1 * time.Second)
 
 	for i := 0; i < 5; i++ {
 		delay, _ := b.Next(nil)
