@@ -1,30 +1,23 @@
 # Retry
 
-[![GoDoc](https://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](https://pkg.go.dev/mod/github.com/sethvargo/go-retry)
-[![GitHub Actions](https://img.shields.io/github/workflow/status/sethvargo/go-retry/Test?style=flat-square)](https://github.com/sethvargo/go-retry/actions?query=workflow%3ATest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/aisbergg/go-retry)](https://goreportcard.com/report/github.com/aisbergg/go-retry)
+[![GoDoc](https://godoc.org/github.com/aisbergg/go-retry?status.svg)](https://godoc.org/github.com/aisbergg/go-retry)
 
-Retry is a Go library for facilitating retry logic and backoff. It's highly
-extensible with full control over how and when retries occur. You can also write
-your own custom backoff functions by implementing the Backoff interface.
+Retry is a Go library for facilitating retry logic and backoff. It's highly extensible with full control over how and when retries occur. You can also write your own custom backoff functions by implementing the Backoff interface.
 
 ## Features
 
-- **Extensible** - Inspired by Go's built-in HTTP package, this Go backoff and
-  retry library is extensible via middleware. You can write custom backoff
-  functions or use a provided filter.
+- **Extensible** - Inspired by Go's built-in HTTP package, this Go backoff and retry library is extensible via middleware. You can write custom backoff functions or use a provided filter.
 
-- **Independent** - No external dependencies besides the Go standard library,
-  meaning it won't bloat your project.
+- **Independent** - No external dependencies besides the Go standard library, meaning it won't bloat your project.
 
-- **Concurrent** - Unless otherwise specified, everything is safe for concurrent
-  use.
+- **Concurrent** - Unless otherwise specified, everything is safe for concurrent use.
 
 - **Context-aware** - Use native Go contexts to control cancellation.
 
 ## Usage
 
-Here is an example use for connecting to a database using Go's `database/sql`
-package:
+Here is an example use for connecting to a database using Go's `database/sql` package:
 
 ```golang
 package main
@@ -35,7 +28,7 @@ import (
   "log"
   "time"
 
-  "github.com/sethvargo/go-retry"
+  "github.com/aisbergg/go-retry"
 )
 
 func main() {
@@ -59,8 +52,7 @@ func main() {
 
 ## Backoffs
 
-In addition to your own custom algorithms, there are built-in algorithms for
-backoff in the library.
+In addition to your own custom algorithms, there are built-in algorithms for backoff in the library.
 
 ### Constant
 
@@ -78,8 +70,7 @@ NewConstant(1 * time.Second)
 
 ### Exponential
 
-Arguably the most common backoff, the next value is double the previous value.
-Here is an example:
+Arguably the most common backoff, the next value is double the previous value. Here is an example:
 
 ```text
 1s -> 2s -> 4s -> 8s -> 16s -> 32s -> 64s
@@ -93,10 +84,7 @@ NewExponential(1 * time.Second)
 
 ### Fibonacci
 
-The Fibonacci backoff uses the Fibonacci sequence to calculate the backoff. The
-next value is the sum of the current value and the previous value. This means
-retires happen quickly at first, but then gradually take slower, ideal for
-network-type issues. Here is an example:
+The Fibonacci backoff uses the Fibonacci sequence to calculate the backoff. The next value is the sum of the current value and the previous value. This means retires happen quickly at first, but then gradually take slower, ideal for network-type issues. Here is an example:
 
 ```text
 1s -> 1s -> 2s -> 3s -> 5s -> 8s -> 13s
@@ -110,9 +98,7 @@ NewFibonacci(1 * time.Second)
 
 ## Modifiers (Middleware)
 
-The built-in backoff algorithms never terminate and have no caps or limits - you
-control their behavior with middleware. There's built-in middleware, but you can
-also write custom middleware.
+The built-in backoff algorithms never terminate and have no caps or limits - you control their behavior with middleware. There's built-in middleware, but you can also write custom middleware.
 
 ### Retryable
 
@@ -139,8 +125,7 @@ retryFunc := func(ctx context.Context) error {
 
 ### Jitter
 
-To reduce the changes of a thundering herd, add random jitter to the returned
-value.
+To reduce the changes of a thundering herd, add random jitter to the returned value.
 
 ```golang
 b := NewFibonacci(1 * time.Second)
@@ -158,8 +143,7 @@ b = WithJitterPercent(5, true, b)
 
 ### MaxRetries
 
-To terminate a retry, specify the maximum number of _retries_. Note this
-is _retries_, not _attempts_. Attempts is retries + 1.
+To terminate a retry, specify the maximum number of _retries_. Note this is _retries_, not _attempts_. Attempts is retries + 1.
 
 ```golang
 b := NewFibonacci(1 * time.Second)
@@ -281,9 +265,7 @@ func main() {
 
 ## Benchmarks
 
-Here are benchmarks against some other popular Go backoff and retry libraries.
-You can run these benchmarks yourself via the `benchmark/` folder. Commas and
-spacing fixed for clarity.
+Here are benchmarks against some other popular Go backoff and retry libraries. You can run these benchmarks yourself via the `benchmark/` folder. Commas and spacing fixed for clarity.
 
 ```text
 Benchmark/cenkalti-7      13,052,668     87.3 ns/op
@@ -293,8 +275,5 @@ Benchmark/sethvargo-7    203,914,245     5.73 ns/op
 
 ## Notes and Caveats
 
-- Randomization uses `math/rand` seeded with the Unix timestamp instead of
-  `crypto/rand`.
-- Ordering of addition of multiple modifiers will make a difference.
-  For example; ensure you add `CappedDuration` before `WithMaxDuration`, otherwise it may early out too early.
-  Another example is you could add `Jitter` before or after capping depending on your desired outcome.
+- Randomization uses `math/rand` seeded with the Unix timestamp instead of `crypto/rand`.
+- Ordering of addition of multiple modifiers will make a difference. For example; ensure you add `CappedDuration` before `WithMaxDuration`, otherwise it may early out too early. Another example is you could add `Jitter` before or after capping depending on your desired outcome.

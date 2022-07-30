@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	sethvargo "github.com/aisbergg/go-retry"
 	cenkalti "github.com/cenkalti/backoff"
 	lestrrat "github.com/lestrrat-go/backoff"
-	sethvargo "github.com/sethvargo/go-retry"
 )
 
 func Benchmark(b *testing.B) {

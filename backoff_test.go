@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sethvargo/go-retry"
+	"github.com/aisbergg/go-retry"
 )
 
 func ExampleBackoffFunc() {
